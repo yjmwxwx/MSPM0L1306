@@ -3,132 +3,194 @@ ARM GAS  1.s 			page 1
 
    1              		@MSPM0L1306
    2              		@编译器ARM-NONE-EABI
-   3              	
-   4              		.thumb
-   5              		.syntax unified
-   6              		.section .text
-   7              	vectors:
-   8 0000 00010020 		.word zhanding
-   9 0004 41000000 		.word kaishi + 1
-  10 0008 95000000 		.word _nmi	+1
-  11 000c 95000000 		.word _Hard_Fault +1
-  12 0010 00000000 		.word 0
-  13 0014 00000000 		.word 0
-  14 0018 00000000 		.word 0
-  15 001c 00000000 		.word 0
-  16 0020 00000000 		.word 0
-  17 0024 00000000 		.word 0
-  18 0028 00000000 		.word 0
-  19 002c 95000000 		.word _svc_handler +1
-  20 0030 00000000 		.word 0
-  21 0034 00000000 		.word 0
-  22 0038 95000000 		.word _pendsv_handler +1
-  23 003c 95000000 		.word _systickzhongduan +1  @ 15
-  24              	
-  25              		
-  26              	kaishi:
-  27              	__IOMUX_she_zhi:	
-  28              	@	ldr r0, = 0x40428000
-  29              	__dma:
-  30 0040 1548     		ldr r0, = 0x4042a000	@DMA寄存器基址
-  31 0042 1649     		ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
-  32 0044 0322     		movs r2, # 0x03		@adc0 触发通道选择
-  33 0046 4250     		str r2, [r0, r1]
-  34              	
-  35              	
-  36 0048 1549     		ldr r1, = 0x1204	@DMASA寄存器偏移地址
-  37 004a 164A     		ldr r2, = 0x4055a280	@传输源地址，ADC别名区
-  38 004c 4250     		str r2, [r0, r1]
+   3              		@功能TIMG4触发ADC采样，采集A0和A1，通过DMA把两个32位传输到0X20000100，
+   4              		@DMA重复模式，传输长度12个64位数
+   5              		.thumb
+   6              		.syntax unified
+   7              		.section .text
+   8              	vectors:
+   9 0000 00010020 		.word zhanding
+  10 0004 41000000 		.word kaishi + 1
+  11 0008 CF000000 		.word _nmi	+1
+  12 000c CF000000 		.word _Hard_Fault +1
+  13 0010 00000000 		.word 0
+  14 0014 00000000 		.word 0
+  15 0018 00000000 		.word 0
+  16 001c 00000000 		.word 0
+  17 0020 00000000 		.word 0
+  18 0024 00000000 		.word 0
+  19 0028 00000000 		.word 0
+  20 002c CF000000 		.word _svc_handler +1
+  21 0030 00000000 		.word 0
+  22 0034 00000000 		.word 0
+  23 0038 CF000000 		.word _pendsv_handler +1
+  24 003c CF000000 		.word _systickzhongduan +1  @ 15
+  25              	
+  26              		
+  27              	kaishi:
+  28              	_neicunqingling:
+  29 0040 2348     		ldr r0, = 0x20001000
+  30 0042 244A     		ldr r2, = 0x20000000
+  31 0044 0021     		movs r1, # 0
+  32              	_neicunqinglingxunhuan:
+  33 0046 0438     		subs r0, r0, # 4
+  34 0048 0160     		str r1, [r0]
+  35 004a 9042     		cmp r0, r2
+  36 004c FBD1     		bne _neicunqinglingxunhuan
+  37              	
+  38              	
   39              	
-  40 004e 1649     		ldr r1, = 0x1208	@DMADA寄存器偏移地址
-  41 0050 164A     		ldr r2, = 0x20000200	 @传输目标地址
-  42 0052 4250     		str r2, [r0, r1]
-  43              	
-  44 0054 1649     		ldr r1, = 0x120c	@DMASZ寄存器偏移地址
-  45 0056 174A     		ldr r2, = 12		@传输数量
-  46 0058 4250     		str r2, [r0, r1]
-  47              	
-  48 005a 1749     		ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
-  49 005c 174A     		ldr r2, = 0x20301102	@0x20301102	
-  50 005e 4250     		str r2, [r0, r1]	@开DMA，设置传输模式
-  51              		
-  52              	__adc0:
-  53 0060 1748     		ldr r0, = 0x40004000	@寄存器基址
-  54 0062 1849     		ldr r1, = 0x800		@寄存器偏移
-  55 0064 184A     		ldr r2, = 0x26000001	
-  56 0066 4250     		str r2, [r0, r1]	@开电源
-  57              	
+  40              	
+  41              	
+  42              	
+  43              		
+  44              	__IOMUX_she_zhi:	
+  45              	@	ldr r0, = 0x40428000
+  46              	
+  47              		
+  48              	__TIMG4:
+  49              		@ADC触发源
+  50 004e 2248     		ldr r0, = 0x4008c000	@寄存器基址
+  51 0050 2249     		ldr r1, = 0x800		@寄存器偏移
+  52 0052 234A     		ldr r2, = 0x26000001	
+  53 0054 4250     		str r2, [r0, r1]	@开电源
+  54              	
+  55              		
+  56 0056 2349     		ldr r1, = 0x1008	@CLKSEL
+  57 0058 0822     		movs r2, # 0x08
 ARM GAS  1.s 			page 2
 
 
-  58 0068 1849     		ldr r1, = 0x808		@CLKCFG  ADC时钟配置寄存器
-  59 006a 194A     		ldr r2, = 0xa9000002
-  60 006c 4250     		str r2, [r0, r1]
-  61              	
-  62 006e 1949     		ldr r1, = 0x1088	@IMASK
-  63              					@DMA_TRIG
-  64 0070 194A     		ldr r2, = 0x100
-  65 0072 4250     		str r2, [r0, r1]	@触发DMA相关
-  66              	
-  67 0074 0949     		ldr r1, = 0x1110	@CLKFREQ 采样时钟范围
-  68 0076 0522     		movs r2, # 5
-  69 0078 4250     		str r2, [r0, r1]
-  70              	
-  71 007a 1849     		ldr r1, = 0x1104  	@CTL1 控制寄存器1
-  72 007c 184A     		ldr r2, = 0x30100
-  73 007e 4250     		str r2, [r0, r1]	@序列重复转换
-  74              	
-  75 0080 1849     		ldr r1, = 0x1108	@CTL2控制寄存器2
-  76 0082 194A     		ldr r2, = 0x3000900
-  77 0084 4250     		str r2, [r0, r1] 	@转换序列选择
+  58 005a 4250     		str r2, [r0, r1]	@时钟选择
+  59              	
+  60              		
+  61 005c 2249     		ldr r1, = 0x1058	@IMASK
+  62              					@GEN_EVENT0
+  63 005e 0122     		movs r2, # 0x01
+  64 0060 4250     		str r2, [r0, r1]	@触发ADC
+  65              	
+  66 0062 2249     		ldr r1, = 0x444		@FPUB_0
+  67 0064 0122     		movs r2, # 0x01
+  68 0066 4250     		str r2, [r0, r1]	@发布事件1
+  69              	
+  70              		
+  71 0068 2149     		ldr r1, = 0x1808	@LOAD寄存器
+  72 006a 224A     		ldr r2, = 319		@触发频率100KHZ
+  73 006c 4250     		str r2, [r0, r1]	@写入定时器最大计数值
+  74              		
+  75 006e 2249     		ldr r1, = 0x1804	@CTRCTL
+  76 0070 0322     		movs r2, # 0x03
+  77 0072 4250     		str r2, [r0, r1]	@ 开定时器
   78              	
-  79 0086 1949     		ldr r1, = 0x1184
-  80 0088 0122     		movs r2, # 0x01
-  81 008a 4250     		str r2, [r0, r1]
-  82              		
-  83 008c 1849     		ldr r1, = 0x1100  	@CTL0 控制寄存器 0
-  84 008e 194A     		ldr r2, = 0x10001
-  85 0090 4250     		str r2, [r0, r1]   
-  86              		
-  87              		
-  88              	
-  89              	
-  90              		
-  91              	ting:
-  92              	
-  93 0092 FEE7     		b ting
-  94              		
-  95              	_nmi:
-  96              	_Hard_Fault:
-  97              	_svc_handler:
-  98              	_pendsv_handler:	
-  99              	_systickzhongduan:
- 100              	aaa:
- 101 0094 7047     		bx lr
+  79              		
+  80              	__dma0:
+  81 0074 2148     		ldr r0, = 0x4042a000	@DMA寄存器基址
+  82 0076 2249     		ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
+  83 0078 0322     		movs r2, # 0x03		@adc0 触发通道选择
+  84 007a 4250     		str r2, [r0, r1]
+  85              	
+  86              	
+  87 007c 2149     		ldr r1, = 0x1204	@DMASA寄存器偏移地址
+  88 007e 224A     		ldr r2, = 0x4055a280	@传输源地址，ADC别名区
+  89 0080 4250     		str r2, [r0, r1]
+  90              	
+  91 0082 2249     		ldr r1, = 0x1208	@DMADA寄存器偏移地址
+  92 0084 224A     		ldr r2, = dianyabiao    @传输目标地址
+  93 0086 4250     		str r2, [r0, r1]
+  94              	
+  95 0088 2249     		ldr r1, = 0x120c	@DMASZ寄存器偏移地址
+  96 008a 234A     		ldr r2, = 12		@传输数量
+  97 008c 4250     		str r2, [r0, r1]
+  98              	
+  99 008e 2349     		ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
+ 100 0090 234A     		ldr r2, = 0x20303302	@0x20301102	
+ 101 0092 4250     		str r2, [r0, r1]	@开DMA，设置传输模式
  102              		
- 103 0096 0000     		.section .data
- 104              		.equ zhanding,	0x20000100
- 105              		
+ 103              	__adc0:
+ 104 0094 2348     		ldr r0, = 0x40004000	@寄存器基址
+ 105 0096 1149     		ldr r1, = 0x800		@寄存器偏移
+ 106 0098 114A     		ldr r2, = 0x26000001	
+ 107 009a 4250     		str r2, [r0, r1]	@开电源
+ 108              	
+ 109 009c 2249     		ldr r1, = 0x400		@FSUB_0
+ 110 009e 0122     		movs r2, # 0x01
+ 111 00a0 4250     		str r2, [r0, r1]	@订阅TIM发布的事件1
+ 112              	
+ 113 00a2 2249     		ldr r1, = 0x808		@CLKCFG  ADC时钟配置寄存器
+ 114 00a4 224A     		ldr r2, = 0xa9000002
 ARM GAS  1.s 			page 3
 
 
+ 115 00a6 4250     		str r2, [r0, r1]
+ 116              	
+ 117 00a8 2249     		ldr r1, = 0x1088	@IMASK
+ 118              					@DMA_TRIG
+ 119 00aa 234A     		ldr r2, = 0x200
+ 120 00ac 4250     		str r2, [r0, r1]	@那个通道触发DMA
+ 121              	
+ 122 00ae 1449     		ldr r1, = 0x1110	@CLKFREQ 采样时钟范围
+ 123 00b0 0522     		movs r2, # 5
+ 124 00b2 4250     		str r2, [r0, r1]
+ 125              	
+ 126 00b4 2149     		ldr r1, = 0x1104  	@CTL1 控制寄存器1
+ 127 00b6 224A     		ldr r2, = 0x30001	@硬件触发
+ 128 00b8 4250     		str r2, [r0, r1]	@序列重复转换
+ 129              	
+ 130 00ba 2249     		ldr r1, = 0x1108	@CTL2控制寄存器2
+ 131 00bc 224A     		ldr r2, = 0x3000900	@0x3000900
+ 132 00be 4250     		str r2, [r0, r1] 	@转换序列选择
+ 133              	
+ 134 00c0 2249     		ldr r1, = 0x1184	@MEMCTL 转换存储器控制寄存器
+ 135 00c2 0122     		movs r2, # 0x01		@通道A1
+ 136 00c4 4250     		str r2, [r0, r1]	@
+ 137              		
+ 138 00c6 2249     		ldr r1, = 0x1100  	@CTL0 控制寄存器 0
+ 139 00c8 224A     		ldr r2, = 0x10001
+ 140 00ca 4250     		str r2, [r0, r1]   
+ 141              		
+ 142              		
+ 143              	
+ 144              	
+ 145              		
+ 146              	ting:
+ 147              	
+ 148 00cc FEE7     		b ting
+ 149              		
+ 150              	_nmi:
+ 151              	_Hard_Fault:
+ 152              	_svc_handler:
+ 153              	_pendsv_handler:	
+ 154              	_systickzhongduan:
+ 155              	aaa:
+ 156 00ce 7047     		bx lr
+ 157              		
+ 158              		.section .data
+ 159              		.equ zhanding,		0x20000100
+ 160              		.equ dianyabiao,	0x20000100
+ 161              		
+ARM GAS  1.s 			page 4
+
+
 DEFINED SYMBOLS
-                 1.s:7      .text:00000000 vectors
+                 1.s:8      .text:00000000 vectors
                             *ABS*:20000100 zhanding
-                 1.s:26     .text:00000040 kaishi
-                 1.s:95     .text:00000094 _nmi
-                 1.s:96     .text:00000094 _Hard_Fault
-                 1.s:97     .text:00000094 _svc_handler
-                 1.s:98     .text:00000094 _pendsv_handler
-                 1.s:99     .text:00000094 _systickzhongduan
-                 1.s:27     .text:00000040 __IOMUX_she_zhi
-                 1.s:29     .text:00000040 __dma
+                 1.s:27     .text:00000040 kaishi
+                 1.s:150    .text:000000ce _nmi
+                 1.s:151    .text:000000ce _Hard_Fault
+                 1.s:152    .text:000000ce _svc_handler
+                 1.s:153    .text:000000ce _pendsv_handler
+                 1.s:154    .text:000000ce _systickzhongduan
+                 1.s:28     .text:00000040 _neicunqingling
                             .text:00000000 $d
-                 1.s:30     .text:00000040 $t
-                 1.s:52     .text:00000060 __adc0
-                 1.s:91     .text:00000092 ting
-                 1.s:100    .text:00000094 aaa
-                 1.s:103    .text:00000096 $d
-                 1.s:105    .text:00000098 $d
+                 1.s:29     .text:00000040 $t
+                 1.s:32     .text:00000046 _neicunqinglingxunhuan
+                 1.s:44     .text:0000004e __IOMUX_she_zhi
+                 1.s:48     .text:0000004e __TIMG4
+                 1.s:80     .text:00000074 __dma0
+                            *ABS*:20000100 dianyabiao
+                 1.s:103    .text:00000094 __adc0
+                 1.s:146    .text:000000cc ting
+                 1.s:155    .text:000000ce aaa
+                 1.s:161    .text:000000d0 $d
 
 NO UNDEFINED SYMBOLS

@@ -24,10 +24,30 @@ vectors:
 
 	
 kaishi:
-	bkpt # 1
 __IOMUX_she_zhi:	
-	ldr r0, = 0x40428000
+@	ldr r0, = 0x40428000
+__dma:
+	ldr r0, = 0x4042a000	@DMA寄存器基址
+	ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
+	movs r2, # 0x03		@adc0 触发通道选择
+	str r2, [r0, r1]
 
+
+	ldr r1, = 0x1204	@DMASA寄存器偏移地址
+	ldr r2, = 0x4055a280	@传输源地址，ADC别名区
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1208	@DMADA寄存器偏移地址
+	ldr r2, = 0x20000200	 @传输目标地址
+	str r2, [r0, r1]
+
+	ldr r1, = 0x120c	@DMASZ寄存器偏移地址
+	ldr r2, = 12		@传输数量
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
+	ldr r2, = 0x20301102	@0x20301102	
+	str r2, [r0, r1]	@开DMA，设置传输模式
 	
 __adc0:
 	ldr r0, = 0x40004000	@寄存器基址
@@ -35,15 +55,15 @@ __adc0:
 	ldr r2, = 0x26000001	
 	str r2, [r0, r1]	@开电源
 
-	ldr r1, = 0x808
+	ldr r1, = 0x808		@CLKCFG  ADC时钟配置寄存器
 	ldr r2, = 0xa9000002
 	str r2, [r0, r1]
 
+	ldr r1, = 0x1088	@IMASK
+				@DMA_TRIG
+	ldr r2, = 0x100
+	str r2, [r0, r1]	@触发DMA相关
 
-@	ldr r1, = 0x1184	@MEMCTL 转换存储器控制寄存器
-@	ldr r2, = 1
-@	str r2, [r0, r1]	@通道选择	
-	
 	ldr r1, = 0x1110	@CLKFREQ 采样时钟范围
 	movs r2, # 5
 	str r2, [r0, r1]
@@ -53,8 +73,12 @@ __adc0:
 	str r2, [r0, r1]	@序列重复转换
 
 	ldr r1, = 0x1108	@CTL2控制寄存器2
-	ldr r2, = 0x3000000
+	ldr r2, = 0x3000900
 	str r2, [r0, r1] 	@转换序列选择
+
+	ldr r1, = 0x1184
+	movs r2, # 0x01
+	str r2, [r0, r1]
 	
 	ldr r1, = 0x1100  	@CTL0 控制寄存器 0
 	ldr r2, = 0x10001
