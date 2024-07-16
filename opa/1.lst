@@ -1,0 +1,228 @@
+ARM GAS  1.s 			page 1
+
+
+   1              		@MSPM0L1306
+   2              		@编译器ARM-NONE-EABI
+   3              	
+   4              		.thumb
+   5              		.syntax unified
+   6              		.section .text
+   7              	vectors:
+   8 0000 00010020 		.word zhanding
+   9 0004 C5000000 		.word kaishi + 1
+  10 0008 59010000 		.word _nmi	+1
+  11 000c 59010000 		.word _Hard_Fault +1
+  12 0010 00000000 		.word 0
+  13 0014 00000000 		.word 0
+  14 0018 00000000 		.word 0
+  15 001c 00000000 		.word 0
+  16 0020 00000000 		.word 0
+  17 0024 00000000 		.word 0
+  18 0028 00000000 		.word 0
+  19 002c 59010000 		.word _svc_handler +1
+  20 0030 00000000 		.word 0
+  21 0034 00000000 		.word 0
+  22 0038 59010000 		.word _pendsv_handler +1
+  23 003c 59010000 		.word _systickzhongduan +1  @ 15
+  24 0040 59010000 		.word aaa +1		@INT_GROUP0	@0 
+  25 0044 59010000 		.word aaa +1		@INT_GROUP1	@1
+  26 0048 59010000 		.word aaa +1		@TIMG1		@2
+  27 004c 59010000 		.word aaa +1				@3
+  28 0050 59010000 		.word aaa +1				@4
+  29 0054 59010000 		.word aaa +1				@5
+  30 0058 59010000 		.word aaa +1				@6
+  31 005c 59010000 		.word aaa +1				@7
+  32 0060 59010000 		.word aaa +1				@8
+  33 0064 59010000 		.word aaa +1		@SPI0		@9
+  34 0068 59010000 		.word aaa +1				@10
+  35 006c 59010000 	        .word aaa +1				@11
+  36 0070 59010000 	        .word aaa +1				@12
+  37 0074 59010000 	        .word aaa +1		@UART1		@13
+  38 0078 59010000 	        .word aaa +1				@14
+  39 007c 59010000 	        .word aaa +1		@UART0		@15		
+  40 0080 59010000 	        .word aaa +1		@TIMG0		@16
+  41 0084 59010000 	        .word aaa +1				@17
+  42 0088 59010000 	        .word aaa +1		@TIMG2		@18
+  43 008c 59010000 	        .word aaa +1				@19
+  44 0090 59010000 	        .word aaa +1		@TIMG4		@20
+  45 0094 59010000 	        .word aaa +1				@21
+  46 0098 59010000 	        .word aaa +1				@22
+  47 009c 59010000 	        .word aaa +1				@23
+  48 00a0 59010000 	        .word aaa +1		@I2C0		@24
+  49 00a4 59010000 	        .word aaa +1		@I2C1		@25
+  50 00a8 59010000 	        .word aaa +1				@26
+  51 00ac 59010000 	        .word aaa +1				@27
+  52 00b0 59010000 	        .word aaa +1				@28
+  53 00b4 59010000 	        .word aaa +1				@29
+  54 00b8 59010000 		.word aaa +1				@30
+  55 00bc 59010000 		.word aaa +1		@DMA		@31
+  56 00c0 59010000 		.word aaa +1
+  57              	
+ARM GAS  1.s 			page 2
+
+
+  58              	kaishi:
+  59              	
+  60              		@bkpt #1
+  61              	__IOMUX_she_zhi:	
+  62              		@	ldr r0, = 0x40428000
+  63              	__opa1:
+  64 00c4 2548     		ldr r0, = 0x40022000	@OPA1基地址
+  65 00c6 2649     		ldr r1, = 0x800
+  66 00c8 264A     		ldr r2, = 0x26000001
+  67 00ca 4250     		str r2, [r0, r1]
+  68              	
+  69 00cc 2649     		ldr r1, = 0x1108	@CFG
+  70 00ce 274A     		ldr r2, = 0x208		@PA18=OPA+
+  71 00d0 4250     		str r2, [r0, r1]
+  72              	
+  73              	
+  74 00d2 2749     		ldr r1, = 0x1100	@CTL
+  75 00d4 0122     		movs r2, # 0x01
+  76 00d6 4250     		str r2, [r0, r1]	@OPA1开
+  77              	
+  78              	__TIMG4:
+  79              		@ADC触发源
+  80 00d8 2648     		ldr r0, = 0x4008c000	@寄存器基址
+  81 00da 2149     		ldr r1, = 0x800		@寄存器偏移
+  82 00dc 214A     		ldr r2, = 0x26000001	
+  83 00de 4250     		str r2, [r0, r1]	@开电源
+  84              	
+  85              		
+  86 00e0 2549     		ldr r1, = 0x1008	@CLKSEL
+  87 00e2 0822     		movs r2, # 0x08
+  88 00e4 4250     		str r2, [r0, r1]	@时钟选择
+  89              	
+  90              		
+  91 00e6 2549     		ldr r1, = 0x1058	@IMASK
+  92              					@GEN_EVENT0
+  93 00e8 0122     		movs r2, # 0x01
+  94 00ea 4250     		str r2, [r0, r1]	@触发ADC
+  95              	
+  96 00ec 2449     		ldr r1, = 0x444		@FPUB_0
+  97 00ee 0122     		movs r2, # 0x01
+  98 00f0 4250     		str r2, [r0, r1]	@发布事件1
+  99              	
+ 100              		
+ 101 00f2 2449     		ldr r1, = 0x1808	@LOAD寄存器
+ 102 00f4 244A     		ldr r2, = 319		@触发频率100KHZ
+ 103 00f6 4250     		str r2, [r0, r1]	@写入定时器最大计数值
+ 104              		
+ 105 00f8 2449     		ldr r1, = 0x1804	@CTRCTL
+ 106 00fa 0322     		movs r2, # 0x03
+ 107 00fc 4250     		str r2, [r0, r1]	@ 开定时器
+ 108              	
+ 109              		
+ 110              	__dma0:
+ 111 00fe 2448     		ldr r0, = 0x4042a000	@DMA寄存器基址
+ 112 0100 2449     		ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
+ 113 0102 0322     		movs r2, # 0x03		@adc0 触发通道选择
+ 114 0104 4250     		str r2, [r0, r1]
+ARM GAS  1.s 			page 3
+
+
+ 115              	
+ 116              	
+ 117 0106 2449     		ldr r1, = 0x1204	@DMASA寄存器偏移地址
+ 118 0108 244A     		ldr r2, = 0x4055a280	@传输源地址，ADC别名区
+ 119 010a 4250     		str r2, [r0, r1]
+ 120              	
+ 121 010c 2449     		ldr r1, = 0x1208	@DMADA寄存器偏移地址
+ 122 010e 254A     		ldr r2, = dianyabiao    @传输目标地址
+ 123 0110 4250     		str r2, [r0, r1]
+ 124              	
+ 125 0112 2549     		ldr r1, = 0x120c	@DMASZ寄存器偏移地址
+ 126 0114 254A     		ldr r2, = 12		@传输数量
+ 127 0116 4250     		str r2, [r0, r1]
+ 128              	
+ 129 0118 2549     		ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
+ 130 011a 264A     		ldr r2, = 0x20303302	@0x20301102	
+ 131 011c 4250     		str r2, [r0, r1]	@开DMA，设置传输模式
+ 132              		
+ 133              	__adc0:
+ 134 011e 2648     		ldr r0, = 0x40004000	@寄存器基址
+ 135 0120 0F49     		ldr r1, = 0x800		@寄存器偏移
+ 136 0122 104A     		ldr r2, = 0x26000001	
+ 137 0124 4250     		str r2, [r0, r1]	@开电源
+ 138              	
+ 139 0126 2549     		ldr r1, = 0x400		@FSUB_0
+ 140 0128 0122     		movs r2, # 0x01
+ 141 012a 4250     		str r2, [r0, r1]	@订阅TIM发布的事件1
+ 142              	
+ 143 012c 2449     		ldr r1, = 0x808		@CLKCFG  ADC时钟配置寄存器
+ 144 012e 254A     		ldr r2, = 0xa9000002
+ 145 0130 4250     		str r2, [r0, r1]
+ 146              	
+ 147 0132 2549     		ldr r1, = 0x1088	@IMASK
+ 148              					@DMA_TRIG
+ 149 0134 254A     		ldr r2, = 0x200
+ 150 0136 4250     		str r2, [r0, r1]	@那个通道触发DMA
+ 151              	
+ 152 0138 1649     		ldr r1, = 0x1110	@CLKFREQ 采样时钟范围
+ 153 013a 0522     		movs r2, # 5
+ 154 013c 4250     		str r2, [r0, r1]
+ 155              	
+ 156 013e 2449     		ldr r1, = 0x1104  	@CTL1 控制寄存器1
+ 157 0140 244A     		ldr r2, = 0x30001	@硬件触发
+ 158 0142 4250     		str r2, [r0, r1]	@序列重复转换
+ 159              	
+ 160 0144 0849     		ldr r1, = 0x1108	@CTL2控制寄存器2
+ 161 0146 244A     		ldr r2, = 0x3000900	@0x3000900
+ 162 0148 4250     		str r2, [r0, r1] 	@转换序列选择
+ 163              	
+ 164 014a 2449     		ldr r1, = 0x1184	@MEMCTL 转换存储器控制寄存器
+ 165 014c 244A     		ldr r2, = 0x100000d	@通道13_OPA1
+ 166 014e 4250     		str r2, [r0, r1]	@
+ 167              		
+ 168 0150 0749     		ldr r1, = 0x1100  	@CTL0 控制寄存器 0
+ 169 0152 244A     		ldr r2, = 0x3010001	
+ 170 0154 4250     		str r2, [r0, r1]	@开ADC，8分频
+ 171              	
+ARM GAS  1.s 			page 4
+
+
+ 172              	ting:
+ 173 0156 FEE7     		b ting
+ 174              	
+ 175              	
+ 176              	
+ 177              		
+ 178              		
+ 179              	
+ 180              	_nmi:
+ 181              	_Hard_Fault:
+ 182              	_svc_handler:
+ 183              	_pendsv_handler:	
+ 184              	_systickzhongduan:
+ 185              	aaa:
+ 186 0158 7047     		bx lr
+ 187              		
+ 188 015a 0000     		.section .data
+ 189              		.equ zhanding,		0x20000100
+ 190              		.equ dianyabiao,	0x20000100
+ARM GAS  1.s 			page 5
+
+
+DEFINED SYMBOLS
+                 1.s:7      .text:00000000 vectors
+                            *ABS*:20000100 zhanding
+                 1.s:58     .text:000000c4 kaishi
+                 1.s:180    .text:00000158 _nmi
+                 1.s:181    .text:00000158 _Hard_Fault
+                 1.s:182    .text:00000158 _svc_handler
+                 1.s:183    .text:00000158 _pendsv_handler
+                 1.s:184    .text:00000158 _systickzhongduan
+                 1.s:185    .text:00000158 aaa
+                 1.s:61     .text:000000c4 __IOMUX_she_zhi
+                 1.s:63     .text:000000c4 __opa1
+                            .text:00000000 $d
+                 1.s:64     .text:000000c4 $t
+                 1.s:78     .text:000000d8 __TIMG4
+                 1.s:110    .text:000000fe __dma0
+                            *ABS*:20000100 dianyabiao
+                 1.s:133    .text:0000011e __adc0
+                 1.s:172    .text:00000156 ting
+                 1.s:188    .text:0000015a $d
+                 1.s:190    .text:0000015c $d
+
+NO UNDEFINED SYMBOLS

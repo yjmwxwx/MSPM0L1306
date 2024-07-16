@@ -1,0 +1,190 @@
+	@MSPM0L1306
+	@编译器ARM-NONE-EABI
+
+	.thumb
+	.syntax unified
+	.section .text
+vectors:
+	.word zhanding
+	.word kaishi + 1
+	.word _nmi	+1
+	.word _Hard_Fault +1
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+	.word _svc_handler +1
+	.word 0
+	.word 0
+	.word _pendsv_handler +1
+	.word _systickzhongduan +1  @ 15
+	.word aaa +1		@INT_GROUP0	@0 
+	.word aaa +1		@INT_GROUP1	@1
+	.word aaa +1		@TIMG1		@2
+	.word aaa +1				@3
+	.word aaa +1				@4
+	.word aaa +1				@5
+	.word aaa +1				@6
+	.word aaa +1				@7
+	.word aaa +1				@8
+	.word aaa +1		@SPI0		@9
+	.word aaa +1				@10
+        .word aaa +1				@11
+        .word aaa +1				@12
+        .word aaa +1		@UART1		@13
+        .word aaa +1				@14
+        .word aaa +1		@UART0		@15		
+        .word aaa +1		@TIMG0		@16
+        .word aaa +1				@17
+        .word aaa +1		@TIMG2		@18
+        .word aaa +1				@19
+        .word aaa +1		@TIMG4		@20
+        .word aaa +1				@21
+        .word aaa +1				@22
+        .word aaa +1				@23
+        .word aaa +1		@I2C0		@24
+        .word aaa +1		@I2C1		@25
+        .word aaa +1				@26
+        .word aaa +1				@27
+        .word aaa +1				@28
+        .word aaa +1				@29
+	.word aaa +1				@30
+	.word aaa +1		@DMA		@31
+	.word aaa +1
+
+kaishi:
+
+	@bkpt #1
+__IOMUX_she_zhi:	
+	@	ldr r0, = 0x40428000
+__opa1:
+	ldr r0, = 0x40022000	@OPA1基地址
+	ldr r1, = 0x800
+	ldr r2, = 0x26000001
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1108	@CFG
+	ldr r2, = 0x208		@PA18=OPA+
+	str r2, [r0, r1]
+
+
+	ldr r1, = 0x1100	@CTL
+	movs r2, # 0x01
+	str r2, [r0, r1]	@OPA1开
+
+__TIMG4:
+	@ADC触发源
+	ldr r0, = 0x4008c000	@寄存器基址
+	ldr r1, = 0x800		@寄存器偏移
+	ldr r2, = 0x26000001	
+	str r2, [r0, r1]	@开电源
+
+	
+	ldr r1, = 0x1008	@CLKSEL
+	movs r2, # 0x08
+	str r2, [r0, r1]	@时钟选择
+
+	
+	ldr r1, = 0x1058	@IMASK
+				@GEN_EVENT0
+	movs r2, # 0x01
+	str r2, [r0, r1]	@触发ADC
+
+	ldr r1, = 0x444		@FPUB_0
+	movs r2, # 0x01
+	str r2, [r0, r1]	@发布事件1
+
+	
+	ldr r1, = 0x1808	@LOAD寄存器
+	ldr r2, = 319		@触发频率100KHZ
+	str r2, [r0, r1]	@写入定时器最大计数值
+	
+	ldr r1, = 0x1804	@CTRCTL
+	movs r2, # 0x03
+	str r2, [r0, r1]	@ 开定时器
+
+	
+__dma0:
+	ldr r0, = 0x4042a000	@DMA寄存器基址
+	ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
+	movs r2, # 0x03		@adc0 触发通道选择
+	str r2, [r0, r1]
+
+
+	ldr r1, = 0x1204	@DMASA寄存器偏移地址
+	ldr r2, = 0x4055a280	@传输源地址，ADC别名区
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1208	@DMADA寄存器偏移地址
+	ldr r2, = dianyabiao    @传输目标地址
+	str r2, [r0, r1]
+
+	ldr r1, = 0x120c	@DMASZ寄存器偏移地址
+	ldr r2, = 12		@传输数量
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
+	ldr r2, = 0x20303302	@0x20301102	
+	str r2, [r0, r1]	@开DMA，设置传输模式
+	
+__adc0:
+	ldr r0, = 0x40004000	@寄存器基址
+	ldr r1, = 0x800		@寄存器偏移
+	ldr r2, = 0x26000001	
+	str r2, [r0, r1]	@开电源
+
+	ldr r1, = 0x400		@FSUB_0
+	movs r2, # 0x01
+	str r2, [r0, r1]	@订阅TIM发布的事件1
+
+	ldr r1, = 0x808		@CLKCFG  ADC时钟配置寄存器
+	ldr r2, = 0xa9000002
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1088	@IMASK
+				@DMA_TRIG
+	ldr r2, = 0x200
+	str r2, [r0, r1]	@那个通道触发DMA
+
+	ldr r1, = 0x1110	@CLKFREQ 采样时钟范围
+	movs r2, # 5
+	str r2, [r0, r1]
+
+	ldr r1, = 0x1104  	@CTL1 控制寄存器1
+	ldr r2, = 0x30001	@硬件触发
+	str r2, [r0, r1]	@序列重复转换
+
+	ldr r1, = 0x1108	@CTL2控制寄存器2
+	ldr r2, = 0x3000900	@0x3000900
+	str r2, [r0, r1] 	@转换序列选择
+
+	ldr r1, = 0x1184	@MEMCTL 转换存储器控制寄存器
+	ldr r2, = 0x100000d	@通道13_OPA1
+	str r2, [r0, r1]	@
+	
+	ldr r1, = 0x1100  	@CTL0 控制寄存器 0
+	ldr r2, = 0x3010001	
+	str r2, [r0, r1]	@开ADC，8分频
+
+ting:
+	b ting
+
+
+
+	
+	
+
+_nmi:
+_Hard_Fault:
+_svc_handler:
+_pendsv_handler:	
+_systickzhongduan:
+aaa:
+	bx lr
+	
+	.section .data
+	.equ zhanding,		0x20000100
+	.equ dianyabiao,	0x20000100
