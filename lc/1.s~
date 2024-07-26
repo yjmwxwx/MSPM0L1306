@@ -125,24 +125,6 @@ __GPIO_she_zhi:
 	ldr r1, = 0x12c0	@寄存器偏移
 	ldr r2, = 0x18		@pa3,pa4
 	str r2, [r0, r1]	@使能输出
-@__comp0:
-@	ldr r0, = 0x40008000
-@	ldr r1, = 0x800
-@	ldr r2, = 0x26000001
-@	str r2, [r0, r1]	@开电源
-@
-@
-@	ldr r1, = 0x808		@CLKCFG
-@	ldr r2, = 0xa9000100
-@	str r2, [r0, r1]
-@	
-@	ldr r1, = 0x1108	@CTL2
-@	movs r2, # 0x08		@vdda做为DAC基准
-@	str r2, [r0, r1]
-@
-@	ldr r1, = 0x110c	@CTL3
-@	ldr r2, = 0x80		@1.65v
-@	str r2, [r0, r1]	@设置DAC输出电压
 	
 __opa1:
 	ldr r0, = 0x40022000	@OPA1基地址
@@ -151,8 +133,10 @@ __opa1:
 	str r2, [r0, r1]	@开电源
 
 	ldr r1, = 0x1108	@CFG
-	ldr r2, = 0x20c		@ 0x60c		@PA18=OPA+
-				@0x28c缓冲
+	ldr r2, = 0x260c
+	@ @PA18=OPA+ @0x28c缓冲,0x260c=2倍，0x460c=4倍，
+	@0x660c=8倍，0x860C=16倍，0xA60C=32倍
+	
 	str r2, [r0, r1]
 
 
@@ -184,7 +168,7 @@ __TIMG4:
 
 	
 	ldr r1, = 0x1808	@LOAD寄存器
-	ldr r2, = 319		@触发频率100KHZ
+	ldr r2, = 399		@触发频率80KHZ
 	str r2, [r0, r1]	@写入定时器最大计数值
 	
 	ldr r1, = 0x1804	@CTRCTL
@@ -192,28 +176,73 @@ __TIMG4:
 	str r2, [r0, r1]	@ 开定时器
 
 	
-__dma0:
-	ldr r0, = 0x4042a000	@DMA寄存器基址
-	ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
-	movs r2, # 0x03		@adc0 触发通道选择
+@__dma0:
+@	ldr r0, = 0x4042a000	@DMA寄存器基址
+@	ldr r1, = 0x1110	@DMATCTL寄存器偏移地址
+@	movs r2, # 0x03		@adc0 触发通道选择
+@	str r2, [r0, r1]
+@
+@
+@	ldr r1, = 0x1204	@DMASA寄存器偏移地址
+@	ldr r2, = 0x4055a284	@0x4055a280	@传输源地址，ADC别名区
+@	str r2, [r0, r1]
+@
+@	ldr r1, = 0x1208	@DMADA寄存器偏移地址
+@	ldr r2, = dianyabiao    @传输目标地址
+@	str r2, [r0, r1]
+@
+@	ldr r1, = 0x120c	@DMASZ寄存器偏移地址
+@	ldr r2, = 1000		@传输数量
+@	str r2, [r0, r1]
+@
+@	ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
+@	ldr r2, = 0x20301102	@0x20303302	@0x20301102	
+@	str r2, [r0, r1]	@开DMA，设置传输模式
+__dma1:	
+	ldr r0, = 0x4042a000    @DMA寄存器基址
+        ldr r1, = 0x1114        @DMATCTL寄存器偏移地址
+        movs r2, # 0x03         @adc0 触发通道选择
+        str r2, [r0, r1]
+
+        ldr r1, = 0x1214        @DMASA寄存器偏移地址
+        ldr r2, = 0x4055a284    @0x4055a280     @传输源地址，ADC别名区
+        str r2, [r0, r1]
+
+        ldr r1, = 0x1218        @DMADA寄存器偏移地址
+        ldr r2, = dianyabiao    @传输目标地址
+        str r2, [r0, r1]
+
+        ldr r1, = 0x121c        @DMASZ寄存器偏移地址
+        ldr r2, = 800          @传输数量
+        str r2, [r0, r1]
+
+        ldr r1, = 0x1210        @DACCTL控制寄存器偏移地址
+        ldr r2, = 0x301102    @0x20303302     @0x20301102
+        str r2, [r0, r1]        @开DMA，设置传输模式
+
+__dma2:
+        ldr r0, = 0x4042a000    @DMA寄存器基址
+        ldr r1, = 0x1118        @DMATCTL寄存器偏移地址
+	movs r2, # 0x03         @adc0 触发通道选择
 	str r2, [r0, r1]
 
+        ldr r1, = 0x1224        @DMASA寄存器偏移地址
+	ldr r2, = 0x4055a284    @0x4055a280     @传输源地址，ADC别名区
+        str r2, [r0, r1]
 
-	ldr r1, = 0x1204	@DMASA寄存器偏移地址
-	ldr r2, = 0x4055a284	@0x4055a280	@传输源地址，ADC别名区
-	str r2, [r0, r1]
+        ldr r1, = 0x1228        @DMADA寄存器偏移地址
+        ldr r2, = dianyabiao1    @传输目标地址
+        str r2, [r0, r1]
 
-	ldr r1, = 0x1208	@DMADA寄存器偏移地址
-	ldr r2, = dianyabiao    @传输目标地址
-	str r2, [r0, r1]
+	ldr r1, = 0x122c        @DMASZ寄存器偏移地址
+        ldr r2, = 800          @传输数量
+        str r2, [r0, r1]
 
-	ldr r1, = 0x120c	@DMASZ寄存器偏移地址
-	ldr r2, = 1000		@传输数量
-	str r2, [r0, r1]
+	ldr r1, = 0x1220        @DACCTL控制寄存器偏移地址
+        ldr r2, = 0x301102    @0x20303302     @0x20301102
+        str r2, [r0, r1]        @开DMA，设置传输模式
 
-	ldr r1, = 0x1200	@DACCTL控制寄存器偏移地址
-	ldr r2, = 0x20301102	@0x20303302	@0x20301102	
-	str r2, [r0, r1]	@开DMA，设置传输模式
+
 	
 __adc0:
 	ldr r0, = 0x40004000	@寄存器基址
@@ -254,6 +283,14 @@ __adc0:
 	ldr r2, = 0x1010001	@ 0x3010001	
 	str r2, [r0, r1]	@开ADC，8分频
 
+	ldr r4, = 0xe000e010
+	ldr r3, = 399999			
+	str r3, [r4, # 4]
+	str r3, [r4, # 8]
+	movs r3, # 0x07
+	str r3, [r4]    @systick 开
+
+	
 	bl __lcd_chushihua
 	bl __lcd_qingping
 
@@ -772,13 +809,38 @@ _Hard_Fault:
 _svc_handler:
 _pendsv_handler:	
 _systickzhongduan:
+	push {r0-r5,lr}
+        ldr r0, = 0x4042b210    @DMA寄存器基址
+        @DMADA寄存器偏移地址
+        ldr r2, = dianyabiao    @传输目标地址
+        str r2, [r0, # 0x08]
+	ldr r2, = dianyabiao1
+	str r2, [r0, # 0x18]
+        @DMASZ寄存器偏移地址
+        ldr r2, = 800          @传输数量
+        str r2, [r0, # 0x0c]
+	str r2, [r0, # 0x1c]
+        @DACCTL控制寄存器偏移地址
+        ldr r2, = 0x301102   
+        str r2, [r0]        @开DMA，设置传输模式
+	str r2, [r0, # 0x10]
+__systick_fanhui:
+	ldr r0, = 0xe0000d04
+	ldr r1, = 0x02000000
+	str r1, [r0]	@ 清除SYSTICK中断
+
+	pop {r0-r5,pc}
+
+
+	
 aaa:
 	bx lr
 	
 	.section .data
 	.equ zhanding,		0x20000100
 	.equ dianyabiao,	0x20000100
-	.equ ji_shu,		0x20000edc
+	.equ dianyabiao1,	0x20000750
+	.equ ji_shu,		0x20000fdc
 	.equ asciibiao,		0x20000fe0
 
 	.align 4
