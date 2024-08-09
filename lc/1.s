@@ -141,11 +141,21 @@ __GPIO_she_zhi:
 	
 
 	
-@__SYSCTL:
-@	ldr r0, = 0x400af000 @SYSCTL寄存器基址
+__SYSCTL:
+	ldr r0, = 0x400af000 @SYSCTL寄存器基址
+	ldr r1, = 0x1310	@sysoscfclctl
+	ldr r2, = 0x2a000001
+	str r2, [r0, r1]
+
+
+
+
+	
 @	ldr r1, = 0x1380	@PMUOPAMP 寄存器
 @	movs r2, # 0x20		@轨到轨模式
 @	str r2, [r0, r1]
+
+
 	
 
 @__opa0:
@@ -343,9 +353,9 @@ __adc0:
 	str r3, [r4]    @systick 开
 	ldr r0, = lvbo_changdu
 	ldr r1, = lvbo_youyi
-	ldr r2, =  10
+	ldr r2, =  100
 	str r2, [r0]
-	movs r2, # 0
+	movs r2, # 5
 	str r2, [r1]
 	
 	bl __lcd_chushihua
@@ -436,6 +446,24 @@ __xianshi_d_q:
 	.ltorg
 
 
+
+__xiangwei_xuanzhuan:
+	@入口旋转因子R0=R，R1=I
+	@入口R2=被旋转R, R3=被旋转I
+	@出口R0,=R，R1=I
+	push {r4-r5,lr}
+	mov r4, r0
+	mov r5, r1
+	muls r0, r0, r2 @X*COS
+	muls r5, r5, r3 @Y*SIN
+	muls r1, r1, r2 @X*SIN
+	muls r4, r4, r3 @Y*COS
+	adds r0, r0, r5
+	subs r1, r4, r1
+	asrs r0, r0, # 15
+	asrs r1, r1, # 15
+	pop {r4-r5,pc}
+	
 __jisuan_L_C:
 	push {r0-r2,lr}
 	ldr r1, = z_i
@@ -443,7 +471,7 @@ __jisuan_L_C:
 	movs r1, r1
 	bpl __jisuan_diangan
 __jisuan_dianrong:
-	ldr r0, = 159154	@15915494
+	ldr r0, = 15915494	@15915494
 	mvns r1, r1
 	adds r1, r1, # 1
 	mov r2, r1
@@ -459,7 +487,7 @@ __jisuan_dianrong:
 	movs r0, # 0
 __z_r_bu_shi_fu:
 	mov r1, r2
-	ldr r2, = 100
+	ldr r2, = 10000
 	muls r0, r0, r2
 	bl _chufa
 	ldr r2, = dq
@@ -601,7 +629,7 @@ __xianshi_zi:
         bl __xie_ascii
 __xianshi_z_i:
         mov r0, r4
-        movs r1, # 4
+        movs r1, # 6
         ldr r2, = asciibiao
 	ldr r4, = z_i
 	ldr r4, [r4]
@@ -610,10 +638,10 @@ __xianshi_z_i:
         movs r3, # 1            @小数点位置
 	b __xianshi_dq
 __xian_shi_q:
-	movs r3, # 3
+	movs r3, # 5
 __xianshi_dq:	
         bl _zhuanascii
-        movs r0, # 4            @写几个字
+        movs r0, # 6            @写几个字
         movs r1, # 48           @字库单字长度
         movs r2, # 3            @宽度
         ldr r3, = 0x1105              @lcd位置
@@ -689,23 +717,36 @@ __xianshi_shangbi_i1:
 
 __jisuan_zukang:
 	push {r2-r4,lr}
-	ldr r0, = shangbi_r
-	ldr r1, = shangbi_i
 	ldr r2, = xiabi_r
 	ldr r3, = xiabi_i
-	ldr r0, [r0]
-	ldr r1, [r1]
 	ldr r2, [r2]
 	ldr r3, [r3]
-	lsls r0, r0, # 2
-	lsls r1, r1, # 2
-	asrs r2, r2, # 7
-	asrs r3, r3, # 7
-	ldr r5, = 33423
-	muls r2, r2, r5
-	muls r3, r3, r5
-	asrs r2, r2, # 15
-	asrs r3, r3, # 15
+@	ldr r0, = 31272
+@	ldr r1, = -9788
+@	ldr r4, = 34032
+@	muls r0, r0, r4
+@	muls r1, r1, r4
+@	asrs r0, r0, # 15
+@	asrs r1, r1, # 15
+@	bl __xiangwei_xuanzhuan
+@	mov r2, r0
+@	mov r3, r1
+	ldr r0, = shangbi_r
+	ldr r1, = shangbi_i
+	ldr r4, = 5000
+	ldr r0, [r0]
+	ldr r1, [r1]
+	muls r0, r0, r4
+	muls r1, r1, r4
+@	lsls r0, r0, # 4
+@	lsls r1, r1, # 4
+@	asrs r2, r2, # 9
+@	asrs r3, r3, # 9
+@	ldr r4, = 6770
+@	muls r2, r2, r4
+@	muls r3, r3, r4
+@	asrs r2, r2, # 12
+@	asrs r3, r3, # 12
 	bl __fu_shu_chu_fa
 @	ldr r0, = z_r
 @	ldr r3, = z_i
@@ -1829,7 +1870,7 @@ __suan_xiabi_dft:
 	ldr r3, [r2]
 	adds r3, r3, # 1
 	str r3, [r2]
-	cmp r3, # 10
+	cmp r3, # 100
 	bcc __xiabi_dft_jisuan
 	movs r1, # 0
 	str r1, [r0]
@@ -1913,7 +1954,7 @@ __suan_shangbi_dft:
         ldr r3, [r2]
         adds r3, r3, # 1
         str r3, [r2]
-	cmp r3, # 10
+	cmp r3, # 100
 	bcc __shangbi_dft_jisuan
         movs r3, # 0
         str r3, [r2]
@@ -2026,11 +2067,11 @@ xiabi_liangcheng:
 
 	.align 4						@dw
 dianrong_danwei_biao:
-	.byte 2, 2,52,52,62
+	.byte 2, 52,52,62,62
 dianrong_xiaoshudian_biao:
-	.byte 0,1,3,0,0
+	.byte 0,3,2,0,3
 diangan_danwei_biao:
-	.byte 7,37,37,37,37
+	.byte 7,7,37,37,37
 
 D_Q:	@D值和Q值
 	.byte 0x9a,0x9a
